@@ -48,7 +48,7 @@ const refactor = input => {
                 ret[id].push(new Factor(factor[0], factor[1].substr(2)))
             else
                 ret[id].push(new Factor(factor[0], '0'))
-        });
+        })
         id++
     }
     return ret
@@ -125,6 +125,10 @@ const sqrt = function(x) {
     return sqrIter(1.0);
 }
 
+const render = arr => {
+
+}
+
 arr = refactor(input)
 check_input(arr)
 reduce(arr)
@@ -157,4 +161,62 @@ if (degree != 0)
     }
 } else if (degree == 0) {
     console.log("Every real number is solution to the equation")
+}
+
+if (process.argv[3] == '-render') {
+    let dimensions = 1000
+    const express = require("express")
+    const app = express()
+    const opn = require("openurl")
+    const { createCanvas, loadImage } = require('canvas')
+    const canvas = createCanvas(dimensions, dimensions)
+    const ctx = canvas.getContext('2d')
+
+    if (process.argv) {
+        dimensions = parseInt(process.argv[4])
+    }
+
+    ctx.fillStyle = 'white'
+    ctx.fillRect(0,0,dimensions,dimensions)
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)'
+    ctx.beginPath()
+    ctx.moveTo(dimensions/2, 0)
+    ctx.lineTo(dimensions/2, dimensions)
+    ctx.moveTo(0, dimensions/2)
+    ctx.lineTo(dimensions, dimensions/2)
+    ctx.stroke()
+    let max = 0
+    arr[0].forEach(elem => {
+        max += Math.pow(dimensions / 2, elem.degree)
+    })
+    for (x = -(dimensions / 2); x < dimensions / 2; x++) {
+        let y = 0
+        arr[0].forEach(elem => {
+            y += Math.pow(x, elem.degree)
+        })
+        ctx.fillStyle = 'black'
+        ctx.fillRect(x + dimensions / 2, y / max * dimensions + dimensions / 2, 1, 1); 
+    }
+    ctx.font = "10px Arial";
+    for (x = -10; x < 10; x++) {
+        ctx.fillText(x * dimensions / 10, x * dimensions / 10 + dimensions / 2 - (ctx.measureText(x * dimensions / 10).width / 2), dimensions / 2);
+    }
+    for (y = -10; y < 10; y++) {
+        if (y != 0)
+            ctx.fillText(y * dimensions / 10, dimensions / 2, y * dimensions / 10 + dimensions / 2);
+    }
+    app.get("/", (req, res) => {
+        let data = canvas.toDataURL()
+        data = data.split(",")[1]
+        let img = new Buffer.from(data, 'base64');
+        res.writeHead(200, {
+            'Content-Type': 'image/png',
+            'Content-Length': img.length
+        });
+        res.end(img)
+    })
+    
+    app.listen(3000)
+
+    opn.open("http://localhost:3000")
 }
